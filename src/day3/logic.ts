@@ -1,133 +1,38 @@
-import {
-  Bit,
-  BitOptions,
-  Counter,
-  Maybe,
-  PowerConsumptionRatesCriteria,
-  LifeSupportRatesCriteria,
-  PowerConsumptionRate,
-  LifeSupportRate,
-} from './types';
+const UPPERCASE_ASCII_DIFF = 38;
+const LOWERCASE_ASCII_DIFF = 96;
 
-const getMostCommonBit = (counter: Counter) =>
-  counter[0] > counter[1] ? '0' : '1';
-
-const getLessCommonBit = (counter: Counter) =>
-  counter[1] < counter[0] ? '1' : '0';
-
-export const binaryToDecimal = (binary: string): number => {
-  return parseInt(binary, 2);
+export const getStringHalves = (str: string): [string, string] => {
+  return [str.slice(0, str.length / 2), str.slice(str.length / 2)];
 };
 
-export const binaryToDecimalOldSchool = (binary: string): number => {
-  const t = binary
-    .split('')
-    .reverse()
-    .reduce((total, digit, index) => {
-      if (+digit) {
-        return total + 2 ** index;
-      }
-
-      return total;
-    }, 0);
-
-  return t;
-};
-
-export const createRow = (input: string[], position: number): Bit[] => {
-  return input.map((item) => <Bit>item[position]);
-};
-
-export const countTypeOfBitsInRow = (row: Bit[]): Counter => {
-  const initialCounter: Counter = { '0': 0, '1': 0 };
-
-  return row.reduce((acc: Counter, cu) => {
-    if (cu === BitOptions.zero) {
-      acc[BitOptions.zero] += 1;
+export const getMatchesBetweenTwoStrings = ([str1, str2]: [string, string]) => {
+  const matches: string[] = [];
+  for (let letter of str1) {
+    if (str2.includes(letter) && !matches.includes(letter)) {
+      matches.push(letter);
     }
-    if (cu === BitOptions.one) {
-      acc[BitOptions.one] += 1;
-    }
-
-    return acc;
-  }, initialCounter);
-};
-
-const getPowerComsumptionRatesCriteria = (): PowerConsumptionRatesCriteria => {
-  return {
-    gamma: getMostCommonBit,
-    epsilon: getLessCommonBit,
-  };
-};
-
-export const calcPowerConsumptionRate = (
-  input: string[],
-  rate: PowerConsumptionRate,
-): number => {
-  const numberOfRows = [...Array(input[0].length).keys()];
-
-  const binary = numberOfRows
-    .map((position) => {
-      const row = createRow(input, position);
-      const counter = countTypeOfBitsInRow(row);
-      const rateCalculation = getPowerComsumptionRatesCriteria();
-      const calculateRate = rateCalculation[rate];
-
-      return calculateRate(counter);
-    })
-    .join('');
-
-  return binaryToDecimal(binary);
-};
-
-export const getPowerCompsumtion = (input: string[]): number => {
-  const gammaRate = calcPowerConsumptionRate(input, 'gamma');
-  const epsilonRate = calcPowerConsumptionRate(input, 'epsilon');
-
-  return gammaRate * epsilonRate;
-};
-
-const getLifeSupportRatesCriteria = (): LifeSupportRatesCriteria => {
-  return {
-    oxigenGeneration: getMostCommonBit,
-    CO2Scrubber: getLessCommonBit,
-  };
-};
-
-export const calcLifeSupportRate = (
-  input: string[],
-  rate: LifeSupportRate,
-): Maybe<number> => {
-  const getResult = (
-    filteredInput = input,
-    numberOfRows = 0,
-  ): number | string[] => {
-    const row = createRow(filteredInput, numberOfRows);
-    const counter = countTypeOfBitsInRow(row);
-    const ratesCriteria = getLifeSupportRatesCriteria();
-    const selectedBit = ratesCriteria[rate](counter);
-
-    const result = filteredInput.filter(
-      (el) => el[numberOfRows] === selectedBit,
-    );
-
-    if (result.length === 1) {
-      const binary = result[0];
-      return binaryToDecimal(binary);
-    }
-    return getResult(result, numberOfRows + 1);
-  };
-
-  const result = getResult(input, 0);
-
-  if (typeof result === 'number') {
-    return result;
   }
+  return matches;
 };
 
-export const getLifeSupport = (input: string[]): number => {
-  const oxigenGeneration = calcLifeSupportRate(input, 'oxigenGeneration') ?? 1;
-  const CO2Scrubber = calcLifeSupportRate(input, 'CO2Scrubber') ?? 1;
+export const getLetterPriority = (str: string) => {
+  const letter = str[0];
 
-  return oxigenGeneration * CO2Scrubber;
+  if (letter.toUpperCase() === letter) {
+    return letter.charCodeAt(0) - UPPERCASE_ASCII_DIFF;
+  }
+
+  return letter.charCodeAt(0) - LOWERCASE_ASCII_DIFF;
+};
+
+export const getTotalPriorityValue = (input: string[]) => {
+  return input.reduce((totalValue, rucksack) => {
+    const compartiments = getStringHalves(rucksack);
+    const matches = getMatchesBetweenTwoStrings(compartiments);
+    const commonItemsPriority = matches.reduce(
+      (total, letter) => total + getLetterPriority(letter),
+      0,
+    );
+    return totalValue + commonItemsPriority;
+  }, 0);
 };

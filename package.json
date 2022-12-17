@@ -4,10 +4,10 @@
   "description": "Advent of Code 2022 <adventofcode.com/2022>",
   "main": "index.js",
   "config": {
-    "day": "2"
+    "day": "3"
   },
   "scripts": {
-    "develop": "jest --watch src/day$npm_package_config_day/index.test.ts",
+    "dev": "jest --watch src/day$npm_package_config_day/index.test.ts",
     "solution": "ts-node-dev --respawn --quiet src/day$npm_package_config_day",
     "solutions:log": "ts-node-dev build/src",
     "plop": "plop --plopfile scripts/plop/plopfile.js"
